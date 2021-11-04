@@ -1,0 +1,5 @@
+---
+  - import_playbook: uninstall_mysql.yml
+  - import_playbook: install_mariadb.yml
+  
+        

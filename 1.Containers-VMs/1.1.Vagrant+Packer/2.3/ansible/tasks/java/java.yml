@@ -1,0 +1,15 @@
+---
+  - name: Java playbook
+    hosts: all
+    become: yes
+    vars:
+      - ansible_python_interpreter: /usr/bin/python3
+    tasks:
+      - name: Install ca-certificates-java
+        apt: 
+          name: ca-certificates-java
+          state: latest
+      - name: Install java
+        apt: 
+          name: openjdk-17-jdk
+          state: latest

@@ -1,0 +1,5 @@
+---
+  - import_playbook: tasks/nginx/nginx.yml
+  - import_playbook: tasks/java/java.yml
+  - import_playbook: tasks/tomcat/tomcat.yml
+  - import_playbook: tasks/mysql/mysql.yml

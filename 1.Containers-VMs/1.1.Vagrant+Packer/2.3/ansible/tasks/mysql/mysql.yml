@@ -1,0 +1,20 @@
+---
+  - name: MySQL playbook
+    hosts: all
+    become: yes
+    vars:
+      - ansible_python_interpreter: /usr/bin/python3
+    tasks:
+      - name: Install a MySQL server & client
+        apt:
+          deb: "{{ item }}" 
+        with_items:
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-common_8.0.27-1ubuntu18.04_amd64.deb
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-community-client-plugins_8.0.27-1ubuntu18.04_amd64.deb
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-community-client-core_8.0.27-1ubuntu18.04_amd64.deb
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-community-client_8.0.27-1ubuntu18.04_amd64.deb
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-client_8.0.27-1ubuntu18.04_amd64.deb
+
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-community-server-core_8.0.27-1ubuntu18.04_amd64.deb
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-community-server_8.0.27-1ubuntu18.04_amd64.deb
+          - https://repo.mysql.com/apt/ubuntu/pool/mysql-8.0/m/mysql-community/mysql-server_8.0.27-1ubuntu18.04_amd64.deb

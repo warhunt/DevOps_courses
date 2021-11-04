@@ -1,0 +1,91 @@
+---
+  - name: Tomcat playbook
+    hosts: all
+    become: yes
+    vars:
+      - ansible_python_interpreter: /usr/bin/python3
+    tasks:
+      - name: Download tar.gz
+        get_url:
+          url: http://mirror.olnevhost.net/pub/apache/tomcat/tomcat-10/v10.0.12/bin/apache-tomcat-10.0.12.tar.gz
+          dest: /opt/apache-tomcat-10.0.12.tar.gz
+      - name: Create opt directory for tomcat
+        file:
+          path: /opt/tomcat10
+          state: directory
+      - name: Extract tar.gz into /opt/tomcat10
+        ansible.builtin.unarchive:
+          src: /opt/apache-tomcat-10.0.12.tar.gz
+          dest: /opt/tomcat10
+          remote_src: yes
+          extra_opts: [--strip-components=1]
+      - name: Ensure group "tomcat10" exists
+        ansible.builtin.group:
+          name: tomcat10
+          state: present
+      - name: Add the user 'tomcat'
+        ansible.builtin.user:
+          name: tomcat10
+          home: /opt/tomcat10
+          group: tomcat10
+          shell: /bin/false
+      - name: Give insecure permissions
+        ansible.builtin.file:
+          path: /opt/tomcat10/
+          recurse: yes
+          owner: tomcat10
+          group: tomcat10
+      - name: Give insecure permissions
+        ansible.builtin.file:
+          path: /opt/tomcat10/conf
+          recurse: yes
+          mode: g+r
+      - name: Give insecure permissions
+        ansible.builtin.file:
+          path: /opt/tomcat10/conf
+          mode: g+x
+      - name: Create file
+        file:
+          path: "/etc/systemd/system/tomcat10.service"
+          state: touch
+      - name: add lines
+        lineinfile: 
+          dest: /etc/systemd/system/tomcat10.service
+          line: '{{ item }}'
+        with_items:
+          - "[Unit]"
+          - "Description=Apache Tomcat"
+          - "After=network.target"
+          - ""
+          - "[Service]"
+          - "Type=forking"
+          - ""
+          - "User=tomcat10"
+          - "Group=tomcat10"
+          - ""
+          - "Environment=JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
+          - "Environment=CATALINA_PID=/opt/tomcat10/tomcat10.pid"
+          - "Environment=CATALINA_HOME=/opt/tomcat10"
+          - "Environment=CATALINA_BASE=/opt/tomcat10"
+          - 'Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"'
+          - ""
+          - "ExecStart=/opt/tomcat10/bin/startup.sh"
+          - "ExecStop=/opt/tomcat10/bin/shutdown.sh"
+          - ""
+          - "ExecReload=/bin/kill $MAINPID"
+          - "RemainAfterExit=yes"
+          - ""
+          - "[Install]"
+          - "WantedBy=multi-user.target"
+
+      - name: Force systemd to reread configs
+        ansible.builtin.systemd:
+          daemon_reload: yes
+      - name: Make sure a service unit is running
+        ansible.builtin.systemd:
+          state: started
+          name: tomcat10
+      - name: Enable service tomcat10
+        ansible.builtin.systemd:
+          name: tomcat10
+          enabled: yes

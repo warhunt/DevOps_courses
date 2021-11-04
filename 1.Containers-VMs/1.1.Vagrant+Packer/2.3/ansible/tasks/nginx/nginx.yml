@@ -1,0 +1,23 @@
+---
+  - name: Nginx playbook
+    hosts: all
+    become: yes
+    vars:
+      - ansible_python_interpreter: /usr/bin/python3
+    tasks:
+      - name: Create file
+        copy:
+          content: "deb [arch=amd64] http://nginx.org/packages/mainline/ubuntu/ bionic nginx \n deb-src http://nginx.org/packages/mainline/ubuntu/ bionic nginx"
+          dest: "/etc/apt/sources.list.d/nginx.list"
+      - name: Add an Apt signing key
+        ansible.builtin.apt_key:
+          url: http://nginx.org/keys/nginx_signing.key
+          state: present
+      - name: Update apt packages
+        apt:
+          update_cache: yes
+          cache_valid_time: 3600
+      - name: Install nginx
+        apt:
+          name: nginx
+          state: latest

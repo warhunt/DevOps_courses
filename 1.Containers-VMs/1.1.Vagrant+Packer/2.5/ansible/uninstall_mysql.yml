@@ -1,0 +1,28 @@
+---
+  - name: Uninstall MySQL
+    hosts: all
+    become: yes
+    vars:
+      - ansible_python_interpreter: /usr/bin/python3
+    tasks:
+      - name: Uninstall a MySQL server & client
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+        with_items:
+          - mysql-common
+          - mysql-community-client-plugins
+          - mysql-community-client-core
+          - mysql-community-client
+          - mysql-client
+
+          - mysql-community-server-core
+          - mysql-community-server
+          - mysql-server
+      - name: Remove useless packages from the cache
+        apt:
+          autoclean: yes
+      - name: Remove dependencies that are no longer required
+        apt:
+          autoremove: yes
