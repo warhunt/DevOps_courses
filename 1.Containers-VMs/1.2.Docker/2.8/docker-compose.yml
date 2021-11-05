@@ -1,0 +1,49 @@
+version: '3.8'  
+services:
+  nginx:
+    image: nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - wordpress
+    networks:
+      - app-network
+
+  wordpress:
+    image: wordpress:5.8.1-fpm-alpine
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: ${USER_NAME}
+      WORDPRESS_DB_PASSWORD: ${USER_PASSWORD}
+      WORDPRESS_DB_NAME: ${DB_NAME}
+    volumes:
+      - ./wordpress:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - app-network
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${USER_NAME}
+      MYSQL_PASSWORD: ${USER_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - app-network
+
+volumes:
+  wordpress:
+  db:
+
+networks:
+  app-network:
+    driver: bridge
