@@ -1,0 +1,71 @@
+pipeline {
+    agent any 
+    options {
+        skipDefaultCheckout(true)
+    }
+    stages {
+        stage('Build') { 
+            steps {
+                echo 'Cloning files from repo'
+                git branch: 'master', credentialsId: "${APP_REPO_CREDENTIALS}", url: "${APP_REPO_URL}"
+
+                dir('cicd') {
+                    echo 'Cloning files from cicd'
+                    git branch: 'master', credentialsId: "${CICD_REPO_CREDENTIAL}", url: "${CICD_REPO_URL}"
+
+                    echo 'Move files to ws'
+                    dir('production'){
+                        fileOperations([fileCopyOperation(
+                            excludes: 'Jenkinsfile',
+                            flattenFiles: true,
+                            includes: "*",
+                            targetLocation: "${WORKSPACE}/"
+                        )])
+                    }
+                }
+                
+                echo 'Build docker image'
+                script {
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDENTIAL}", usernameVariable: 'USR', passwordVariable: 'PASSWD')]){
+                        dockerImage = docker.build "${USR}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+
+                        sh "docker save ${USR}/${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} > container.tar"
+                        stash name: "image_stash", includes: "container.tar"
+                    }
+                }
+
+                
+            }
+        }
+        
+        stage('Deploy') {
+            agent { label "${ANSIBLE_AGENT_NODE}" }
+            steps {
+                echo 'Deploy docker image to server'
+                dir('cicd') {
+                    git branch: 'master', credentialsId: "${CICD_REPO_CREDENTIAL}", url: "${CICD_REPO_URL}"
+                }
+                
+                dir('cicd/ansible'){
+                    unstash name: "image_stash"
+                    withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDENTIAL}", usernameVariable: 'USR', passwordVariable: 'PASSWD')]){
+                        ansiblePlaybook(
+                            inventory: 'hosts.ini',
+                            playbook: 'prod-playbook.yml',
+                            credentialsId: "${TARGET_SERVER_CREDENCIAL}",
+                            limit: 'app-prod',
+                            extraVars: [
+                                app_name: "${APP_NAME_ON_SERVER}",
+                                docker_image_name: "${USR}/${DOCKER_IMAGE_NAME}",
+                                app_port: "${APP_PORT_ON_SERVER}",
+                                dest_docker_image: "~/",
+                                path_docker_image: "./container.tar",
+                                docker_image_tag: "${BUILD_NUMBER}"
+                            ]
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

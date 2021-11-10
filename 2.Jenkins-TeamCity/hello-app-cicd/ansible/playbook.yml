@@ -1,0 +1,14 @@
+---
+  - hosts: app
+    become: true
+    become_user: vagrant
+    tasks:
+      - name: Restart a container
+        docker_container:
+          name: "{{ app_name }}"
+          image: "{{ docker_image_name }}"
+          state: started
+          restart: yes
+          ports:
+            - "8080:{{ app_port }}"
+          
