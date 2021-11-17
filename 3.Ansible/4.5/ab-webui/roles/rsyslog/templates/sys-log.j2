@@ -1,0 +1,8 @@
+auth,authpriv.*                 @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}
+*.*;auth,authpriv.none          @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}
+cron.*                          @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}
+daemon.*                        @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}
+kern.*                          @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}
+lpr.*                           @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}
+mail.*                          @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}
+user.*                          @{{ ip_addres }}:{{ udp_port }};{{ json_temp }}

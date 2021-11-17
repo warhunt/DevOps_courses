@@ -1,0 +1,4 @@
+---
+# defaults file for haproxy
+servers:
+  - { name: webui, ip: 192.168.9.15, port: 80}

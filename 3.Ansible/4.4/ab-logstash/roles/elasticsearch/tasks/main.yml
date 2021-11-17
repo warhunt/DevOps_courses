@@ -1,0 +1,48 @@
+---
+# tasks file for elasticsearch
+- name: Install a elasticsearch-2.4.2.deb package from the internet
+  apt:
+    deb: https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.4.2/elasticsearch-2.4.2.deb
+  notify:
+    - Restart elasticsearch
+
+- name: Hold elasticsearch
+  dpkg_selections:
+    name: elasticsearch
+    selection: hold
+
+- name: Replace line in /etc/elasticsearch/elasticsearch.yml
+  lineinfile: 
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '{{ item.regexp }}' 
+    line: '{{ item.line }}'
+    backrefs: yes
+  with_items: '{{ line_to_replace }}'
+  notify:
+    - Restart elasticsearch
+
+- name: Add a line to a /etc/elasticsearch/elasticsearch.yml 
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: "{{ item }}"
+    insertafter: '^(.*)http.port(.*)$'
+  with_items: '{{ line_to_add }}'
+  notify:
+    - Restart elasticsearch
+
+- name: Check if plugin installed
+  stat:
+    path: "/usr/share/elasticsearch/plugins/{{ item.name }}"
+  loop: "{{ plugins_to_install }}"
+  register: dir_stat
+
+- name: Install elasticsearc plugin
+  command: /usr/share/elasticsearch/bin/plugin install {{ item.item.url }}
+  when: (item.stat.exists|bool == false)
+  loop: "{{ dir_stat.results }}"
+  notify:
+    - Restart elasticsearch
+
+
+
+  

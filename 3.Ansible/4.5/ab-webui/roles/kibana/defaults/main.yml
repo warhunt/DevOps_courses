@@ -1,0 +1,6 @@
+---
+# defaults file for kibana
+ip_elasticsearch: 192.168.9.16
+
+line_to_replace:
+  - { regexp: '^(.*)elasticsearch: "http://(.*)$', line: '    elasticsearch: "http://{{ ip_elasticsearch }}:9200",' }

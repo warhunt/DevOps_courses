@@ -1,0 +1,4 @@
+---
+# defaults file for logstash
+sender_ip: 192.168.9.15
+sender_port: 10514

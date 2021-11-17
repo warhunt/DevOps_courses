@@ -1,0 +1,21 @@
+---
+# defaults file for elasticsearch
+line_to_replace:
+  - { regexp: '^(.*)cluster.name(.*)$', line: 'cluster.name: logstash'}
+  - { regexp: '^(.*)node.name(.*)$', line: 'node.name: wolly-node'}
+  - { regexp: '^(.*)network.host(.*)$', line: 'network.host: {{ inventory_hostname }}'}
+  - { regexp: '^(.*)http.port(.*)$', line: 'http.port: 9200'}
+  - { regexp: '^(.*)discovery.zen.ping.unicast.hosts(.*)$', line: 'discovery.zen.ping.unicast.hosts: ["{{ inventory_hostname }}"]'}
+
+line_to_add:
+  - 'http.cors.enabled : true'
+  - 'http.cors.allow-origin: "*"'
+  - 'http.cors.allow-methods: OPTIONS, HEAD, GET, POST, PUT, DELETE'
+  - 'http.cors.allow-headers: X-Requested-With,X-Auth-Token,Content-Type,Content-Length'
+  - 'http.cors.allow-credentials: true'
+
+plugins_to_install:
+  - { name: hq, url: https://github.com/ElasticHQ/elasticsearch-HQ/archive/refs/tags/v2.0.3.zip }
+  - { name: head, url: mobz/elasticsearch-head }
+  - { name: cloud-aws, url: https://repo1.maven.org/maven2/org/elasticsearch/plugin/cloud-aws/2.4.2/cloud-aws-2.4.2.zip }
+  

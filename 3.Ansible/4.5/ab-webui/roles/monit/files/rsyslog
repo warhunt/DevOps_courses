@@ -1,0 +1,12 @@
+ check process rsyslog with pidfile /var/run/rsyslogd.pid
+   group rsyslog
+   depend rsyslog_bin
+   depend rsyslog_rc
+
+ check file rsyslog_bin with path /usr/sbin/rsyslogd
+   group rsyslog
+   include /etc/monit/templates/rootbin
+
+ check file rsyslog_rc with path /etc/init.d/rsyslog
+   group rsyslog
+   include /etc/monit/templates/rootbin

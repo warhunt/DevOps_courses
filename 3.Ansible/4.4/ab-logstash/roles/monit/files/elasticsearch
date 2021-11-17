@@ -1,0 +1,11 @@
+ check process elasticsearch with pidfile /var/run/elasticsearch/elasticsearch.pid
+   group elasticsearch
+   start program = "/etc/init.d/elasticsearch start"
+   stop program = "/etc/init.d/elasticsearch stop"
+   if failed host 192.168.9.16 port 9200 protocol HTTP request "/" then restart
+   if 5 restarts with 5 cycles then timeout
+   depend elasticsearch_rc
+
+ check file elasticsearch_rc with path /etc/init.d/elasticsearch
+   group elasticsearch
+   include /etc/monit/templates/rootbin

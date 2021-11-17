@@ -1,0 +1,3 @@
+---
+# defaults file for ntp
+ip_ntp_server: 95.163.183.223

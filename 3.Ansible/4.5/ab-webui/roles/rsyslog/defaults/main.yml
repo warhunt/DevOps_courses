@@ -1,0 +1,10 @@
+---
+# defaults file for rsyslog
+ip_addres: 192.168.9.16
+udp_port: 10514
+
+json_temp: default_json_temp
+
+line_to_replace:
+  - { regexp: '^(.*)ModLoad imudp(.*)$', line: '$ModLoad imudp'}
+  - { regexp: '^(.*)UDPServerRun(.*)$', line: '$UDPServerRun 514'}

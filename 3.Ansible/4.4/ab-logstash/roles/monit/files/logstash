@@ -1,0 +1,5 @@
+ check process logstash.service matching "logstash.*"
+   start program = "/bin/systemctl start logstash"
+   stop program = "/bin/systemctl stop logstash"
+   if cpu usage > 90% for 5 cycles then alert
+   if 5 restarts within 10 cycles then timeout

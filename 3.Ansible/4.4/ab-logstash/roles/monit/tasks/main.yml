@@ -1,0 +1,39 @@
+---
+# tasks file for monit
+
+- name: Install monit
+  apt: 
+    name: monit
+    state: present
+  notify:
+    - Restart monit
+
+- name: Replace line in /etc/monit/monitrc
+  lineinfile: 
+    path: /etc/monit/monitrc
+    regexp: '{{ item.regexp }}' 
+    line: '{{ item.line }}'
+    backrefs: yes
+  with_items: '{{ line_to_replace }}'
+  notify:
+    - Restart monit
+
+- name: Copy file to /etc/monit/conf-available/
+  copy:
+    src: "{{ item }}"
+    dest: /etc/monit/conf-available/
+  with_fileglob: "files/*"
+  notify:
+    - Restart monit
+
+- name: Create symbolic link to /etc/monit/conf-enabled/
+  file:
+    src: "/etc/monit/conf-available/{{ item | basename }}"
+    dest: "/etc/monit/conf-enabled/{{ item | basename }}"
+    state: link
+  with_fileglob: "files/*"
+  notify:
+    - Restart monit
+
+
+

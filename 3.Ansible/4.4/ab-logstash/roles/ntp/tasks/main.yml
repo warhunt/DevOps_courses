@@ -1,0 +1,16 @@
+---
+# tasks file for ntp
+- name: Install ntpdate
+  apt:
+    state: present
+    name: ntpdate
+
+- name: Sync time
+  command: ntpdate {{ ip_ntp_server }}
+
+- name: Ensure a time sync job with a run time of 5
+  cron:
+    name: "Sync time"
+    minute: "0"
+    hour: "5"
+    job: "ntpdate {{ ip_ntp_server }}"

@@ -1,0 +1,26 @@
+---
+# tasks file for logstash
+- name: Install a logstash-5.6.16.deb package from the internet
+  apt:
+    deb: https://artifacts.elastic.co/downloads/logstash/logstash-5.6.16.deb
+  notify:
+    - Restart logstash
+
+- name: Hold logstash
+  dpkg_selections:
+    name: logstash
+    selection: hold
+
+- name: Template a file to /etc/logstash/conf.d
+  template:
+    src: input.j2
+    dest: /etc/logstash/conf.d/input.conf
+  notify:
+    - Restart logstash
+
+- name: Template a file to /etc/logstash/conf.d
+  template:
+    src: output.j2
+    dest: /etc/logstash/conf.d/output.conf
+  notify:
+    - Restart logstash

@@ -1,0 +1,26 @@
+---
+- hosts: logstash
+  become: yes
+  roles:
+  - apt
+  - ntp
+  - java
+  - logstash
+  - elasticsearch
+  - monit
+  post_tasks:
+  - name: Get system info
+    command: dmidecode
+    register: info_str
+
+  - set_fact:
+      uuid: "{{ info_str.stdout_lines | map('regex_search','^(.*)UUID(.*)$') | select('string') | map( 'regex_replace', rge) }}"
+    vars: 
+      rge: '\tUUID:\s'
+  
+  - name: Creating a logstash.ini file
+    copy:
+      dest: "/vagrant/logstash.ini"
+      content: |
+        [general]
+        uniqueID={{ uuid.0 }}

@@ -1,0 +1,7 @@
+---
+# defaults file for monit
+port_display: 2812
+
+line_to_replace:
+  - { regexp: '^(.*)set httpd port(.*)$', line: 'set httpd port {{ port_display }} and'}
+  - { regexp: '^(.*)allow admin:monit(.*)$', line: '     allow admin:monit' }

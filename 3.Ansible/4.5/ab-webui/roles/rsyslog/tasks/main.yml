@@ -1,0 +1,45 @@
+---
+# tasks file for rsyslog
+- name: Add rsyslog stable repository from PPA
+  apt_repository:
+    repo: ppa:adiscon/v8-devel
+
+- name: Update the repository cache and install package "rsyslog" to latest version
+  apt:
+    name: rsyslog
+    update_cache: yes
+  notify:
+    - Restart rsyslog
+
+- name: Replace line in /etc/rsyslog.conf
+  lineinfile: 
+    path: /etc/rsyslog.conf
+    regexp: '{{ item.regexp }}' 
+    line: '{{ item.line }}'
+    backrefs: yes
+  with_items: '{{ line_to_replace }}'
+  notify:
+    - Restart rsyslog
+
+- name: Copy json_temp to /etc/rsyslog.d
+  copy:
+    src: "{{ json_temp }}.conf"
+    dest: /etc/rsyslog.d/
+  notify:
+    - Restart rsyslog
+
+- name: Template a file to /etc/rsyslog.d
+  template:
+    src: sys-log.j2
+    dest: /etc/rsyslog.d/sys-log.conf
+  notify:
+    - Restart rsyslog
+
+- name: Insert a line before example
+  lineinfile:
+    path: /etc/rsyslog.d/50-default.conf
+    line: '*.*                 @{{ inventory_hostname }}:514'
+    insertbefore: .*/var/log/auth.log
+  notify:
+    - Restart rsyslog
+    

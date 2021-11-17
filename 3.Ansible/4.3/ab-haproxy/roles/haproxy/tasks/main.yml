@@ -1,0 +1,41 @@
+---
+# tasks file for haproxy
+- name: Install latest version of "software-properties-common" ignoring "install-recommends"
+  apt:
+    name: software-properties-common
+    state: latest
+    install_recommends: no
+
+- name: Add haproxy repository from PPA and install its signing key on Ubuntu target
+  apt_repository:
+    repo: ppa:vbernat/haproxy-2.4
+
+- name: Update repositories cache and install "haproxy" package
+  apt:
+    name: haproxy
+    update_cache: yes
+  notify: 
+    - Restart haproxy
+
+- name: Insert/Update block configuration stanza in /etc/haproxy/haproxy.cfg
+  blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    block: |
+      frontend http_front
+              bind *:80
+              stats uri /haproxy?stats
+              default_backend http_back
+
+      backend http_back
+              balance roundrobin
+  notify: 
+    - Restart haproxy
+
+- name: Add a line to a file /etc/haproxy/haproxy.cfg
+  lineinfile:
+    path: /etc/haproxy/haproxy.cfg
+    insertafter: '^(.*)balance roundrobin(.*)$'
+    line: "        server {{ item.name }} {{ item.ip }}:{{ item.port }} check"
+  loop: "{{ servers }}"
+  notify: 
+    - Restart haproxy

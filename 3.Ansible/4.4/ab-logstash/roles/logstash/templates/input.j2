@@ -1,0 +1,7 @@
+input {
+    udp {
+        port => {{ sender_port }}
+        codec => "json"
+        type => "rsyslog"
+    }
+}

@@ -1,0 +1,26 @@
+---
+- hosts: webui
+  become: yes
+  roles:
+  - apt
+  - ntp
+  - rsyslog
+  - kibana
+  - nginx
+  - monit
+  post_tasks:
+  - name: Get system info
+    command: dmidecode
+    register: info_str
+
+  - set_fact:
+      uuid: "{{ info_str.stdout_lines | map('regex_search','^(.*)UUID(.*)$') | select('string') | map( 'regex_replace', rge) }}"
+    vars: 
+      rge: '\tUUID:\s'
+  
+  - name: Creating a webui.ini file
+    copy:
+      dest: "/vagrant/webui.ini"
+      content: |
+        [general]
+        uniqueID={{ uuid.0 }}

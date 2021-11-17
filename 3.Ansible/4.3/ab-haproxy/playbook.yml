@@ -1,0 +1,27 @@
+---
+- hosts: haproxy
+  become: yes
+  roles:
+  - apt
+  - ntp
+  - haproxy
+  - monit
+  post_tasks:
+  - name: Get system info
+    command: dmidecode
+    register: info_str
+
+  - set_fact:
+      uuid: "{{ info_str.stdout_lines | map('regex_search','^(.*)UUID(.*)$') | select('string') | map( 'regex_replace', rge) }}"
+    vars: 
+      rge: '\tUUID:\s'
+  
+  - name: Creating a haproxy.ini file
+    copy:
+      dest: "/vagrant/haproxy.ini"
+      content: |
+        [general]
+        uniqueID={{ uuid.0 }}
+    
+    
+  
