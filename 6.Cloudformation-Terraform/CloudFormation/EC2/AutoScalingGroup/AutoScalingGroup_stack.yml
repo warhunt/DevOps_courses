@@ -1,0 +1,57 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested AutoScalingGroup Stack
+
+Resources:
+  NginxLaunchConfiguration:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/AutoScalingGroup/LaunchConfiguration/LaunchConfiguration_stack.yml
+
+  NginxAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties: 
+      AutoScalingGroupName: !Join [ "", [ !ImportValue VPCName, "-", NginxAutoScalingGroup ] ]
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: 10
+      HealthCheckType: ELB
+      LaunchConfigurationName: !GetAtt NginxLaunchConfiguration.Outputs.NginxLaunchConfigurationName
+      LoadBalancerNames: 
+        - !ImportValue ClassicELBName
+      MaxSize: 4
+      MinSize: 1
+      Tags: 
+        - Key: Name
+          PropagateAtLaunch: 'false'
+          Value: !Join [ "", [ !ImportValue VPCName, "-", NginxAutoScalingGroup ] ]
+      VPCZoneIdentifier: 
+        - !ImportValue PublicSubnetAID
+        - !ImportValue PublicSubnetBID
+    DependsOn: [ 'NginxLaunchConfiguration' ]
+
+  NginxASGIngressScalingPolicy:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/AutoScalingGroup/ScalingPolicy/ScalingPolicy_stack.yml
+      Parameters:
+        ScalingAdjustment: 1
+        Name: NginxASGIngressScalingPolicy
+        AutoScalingGroupName: !Ref NginxAutoScalingGroup
+  
+  NginxASGDecreaseScalingPolicy:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/AutoScalingGroup/ScalingPolicy/ScalingPolicy_stack.yml
+      Parameters:
+        ScalingAdjustment: -1
+        Name: NginxASGDecreaseScalingPolicy
+        AutoScalingGroupName: !Ref NginxAutoScalingGroup
+
+Outputs:
+  AutoScalingGroupName:
+    Description: AutoScalingGroup name
+    Value: !Ref NginxAutoScalingGroup
+    Export:
+      Name: NginxASGName
+

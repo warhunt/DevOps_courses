@@ -1,0 +1,24 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested CacheSubnetGroup Stack
+
+Resources:
+  CacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties: 
+      CacheSubnetGroupName: !Join [ "", [ !ImportValue VPCName, "-", "CacheSubnetGroup" ] ]
+      Description: SubnetGroup fot CacheClusters
+      SubnetIds: 
+      - !ImportValue PrivateSubnetAID
+      Tags: 
+        - Key: Name
+          Value: !Join [ "", [ !ImportValue VPCName, "-", "CacheSubnetGroup" ] ]
+
+Outputs:
+  CacheSubnetGroupName:
+    Description: CacheSubnetGroupName
+    Value: !Ref CacheSubnetGroup
+    Export:
+      Name: CacheSubnetGroupName
+

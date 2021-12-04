@@ -1,0 +1,37 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested CacheCluster Stack
+
+Parameters:
+  Name: 
+    Type: String
+    Description: Enter CacheCluster name
+  Engine: 
+    Type: String
+    Description: Enter Engine name
+  EngineVersion: 
+    Type: String
+    Description: Enter Engine version 
+  Port: 
+    Type: Number
+    Description: Enter CacheCluster port
+
+
+Resources:
+  CacheCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties: 
+      VpcSecurityGroupIds: 
+        - !ImportValue ElasticCacheSGID
+      CacheSubnetGroupName: !ImportValue CacheSubnetGroupName
+      CacheNodeType: cache.t3.micro
+      ClusterName: !Join [ "", [ !ImportValue VPCName, "-", !Ref Name ] ]
+      Engine: !Ref Engine
+      EngineVersion: !Ref EngineVersion
+      NumCacheNodes: 1
+      Port: !Ref Port
+      Tags: 
+        - Key: Name
+          Value: !Join [ "", [ !ImportValue VPCName, "-", !Ref Name ] ]
+

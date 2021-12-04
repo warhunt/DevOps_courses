@@ -1,0 +1,90 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description:
+  AWS CloudFormation Template to Create All Resource from AWS Basics
+
+Resources:
+  VPC:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/VPC/VPC_stack.yml
+      Parameters:
+        CidrBlock: 10.0.0.0/16
+        Name: K41
+
+  Subnets:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/Subnets/Subnets_stack.yml
+    DependsOn: [ 'VPC' ]
+  
+  InternetGateway:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/InternetGateway/InternetGateway_stack.yml
+    DependsOn: 'VPC'
+
+  NetworkAcls:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/NetworkAcls/NetworkAcls_stack.yml
+    DependsOn: [ 'VPC', 'Subnets']
+
+  RouteTables:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/RouteTables/RouteTables_stack.yml
+    DependsOn: [ 'VPC', 'InternetGateway', 'Subnets' ]
+
+  SecurityGroups:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroups_stack.yml
+    DependsOn: [ 'VPC', 'Subnets' ]
+
+  Instances:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/Instances/Instances_stack.yml
+    DependsOn: [ 'SecurityGroups', 'Subnets' ]
+
+  ELB:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/ELB/LoadBalancer_stack.yml
+    DependsOn: [ 'SecurityGroups', 'Subnets', 'VPC', 'Instances' ]
+
+  RDS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/RDS/DBInstance/DBInstance_stack.yml
+    DependsOn: [ 'VPC', 'SecurityGroups', 'Subnets' ]
+
+  ElacticCache:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/ElasticCache/CacheClusters/CacheClusters_stack.yml
+    DependsOn: [ 'VPC', 'SecurityGroups', 'Subnets' ]
+
+  ASG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/AutoScalingGroup/AutoScalingGroup_stack.yml
+    DependsOn: [ 'VPC', 'ELB', 'SecurityGroups', 'Subnets' ]
+
+  Alarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/CloudWatch/Alarms/Alarms_stack.yml
+    DependsOn: [ 'ASG' ]
+
+
+
+    
+
+  
+  
+  
+
+  

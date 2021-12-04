@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested RouteTables Stack
+
+Resources:
+  PublicRouteTable:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/RouteTables/RouteTable/RouteTable_stack.yml
+      Parameters:
+        Name: PublicRouteTable
+
+  InternetGatewayRoute:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/RouteTables/Route/Route_stack.yml
+      Parameters:
+        GatewayId: !ImportValue InternetGatewayID
+        RouteTableId: !GetAtt PublicRouteTable.Outputs.RouteTableId
+    DependsOn: [ 'PublicRouteTable' ]
+
+  SubnetRouteTableAssociationPublicA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !GetAtt PublicRouteTable.Outputs.RouteTableId
+      SubnetId: !ImportValue PublicSubnetAID
+    DependsOn: [ 'PublicRouteTable' ]
+
+  SubnetRouteTableAssociationPublicB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !GetAtt PublicRouteTable.Outputs.RouteTableId
+      SubnetId: !ImportValue PublicSubnetBID
+    DependsOn: [ 'PublicRouteTable' ]

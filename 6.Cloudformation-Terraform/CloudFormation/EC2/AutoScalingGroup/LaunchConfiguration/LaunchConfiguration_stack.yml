@@ -1,0 +1,42 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested LaunchConfiguration Stack
+
+Resources:
+  NginxLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties: 
+      BlockDeviceMappings: 
+        - DeviceName: /dev/xvda
+          Ebs: 
+            VolumeSize: 8
+            VolumeType: "gp2"
+      SecurityGroups: 
+        - !ImportValue WebSGID
+      ImageId: ami-0d5075a2643fdf738
+      InstanceType: t2.micro
+      KeyName: Wolly-NCalifornia
+      LaunchConfigurationName: !Join [ "", [ !ImportValue VPCName, "-", "NginxLaunchConfiguration" ] ]
+      UserData: 
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            echo "-------------------START-------------------"
+            amazon-linux-extras install nginx1
+
+            mkdir -p /var/www/hellowebsite
+            echo "<html><body><center><h1>Hello from $HOSTNAME</h1></center></body></html>" > /var/www/hellowebsite/index.html
+
+            echo -e "server {\n\tlisten 80;\n\tlisten [::]:80;\n\troot /var/www/hellowebsite;\n\tindex index.html;\n\tlocation / {\n\t\ttry_files \$uri \$uri/ =404;\n\t}\n}" > /etc/nginx/conf.d/hello-website.conf
+
+            systemctl enable nginx
+            systemctl start nginx
+            echo "-------------------FINISH------------------"
+
+Outputs:
+  NginxLaunchConfigurationName:
+    Description: NginxLaunchConfiguration name
+    Value: !Ref NginxLaunchConfiguration
+    Export:
+      Name: NginxLaunchConfigurationName

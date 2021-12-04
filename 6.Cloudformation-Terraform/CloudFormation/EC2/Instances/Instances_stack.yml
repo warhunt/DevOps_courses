@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested Instances Stack
+
+Resources:
+  NginxPublicA:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/Instances/Instance/Instance_stack.yml
+      Parameters:
+        Name: NginxPublicA
+        SecurityGroupIds: !Join [",", [ !ImportValue WebSGID ] ]
+        SubnetId: !ImportValue PublicSubnetAID
+        AvailabilityZone: !Select 
+          - 0
+          - Fn::GetAZs: !Ref 'AWS::Region'
+
+  NginxPublicB:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/EC2/Instances/Instance/Instance_stack.yml
+      Parameters:
+        Name: NginxPublicB
+        SecurityGroupIds: !Join [",", [ !ImportValue WebSGID ] ]
+        SubnetId: !ImportValue PublicSubnetBID
+        AvailabilityZone: !Select 
+          - 1
+          - Fn::GetAZs: !Ref 'AWS::Region'

@@ -1,0 +1,25 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested DBSubnetGroup Stack
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: DBSubnetGroup for PostgresqlDB
+      DBSubnetGroupName: !Join [ "", [ !ImportValue VPCName, "-", "DBSubnetGroup" ] ]
+      SubnetIds: 
+        - !ImportValue PrivateSubnetAID
+        - !ImportValue PrivateSubnetBID
+      Tags: 
+        - Key: Name
+          Value: !Join [ "", [ !ImportValue VPCName, "-", "DBSubnetGroup" ] ]
+
+Outputs:
+  DBSubnetGroupName:
+    Description: DBSubnetGroupName
+    Value: !Ref DBSubnetGroup
+    Export:
+      Name: DBSubnetGroupName
+

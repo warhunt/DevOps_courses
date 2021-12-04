@@ -1,0 +1,40 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested LoadBalancer Stack
+
+Resources:
+  ClassicELB:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties: 
+      CrossZone: 'true'
+      HealthCheck:
+        Target: HTTP:80/
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '3'
+        Interval: '10'
+        Timeout: '5'
+      Instances: 
+        - !ImportValue NginxPublicAID
+        - !ImportValue NginxPublicBID
+      Listeners:
+        - InstancePort: '80'
+          InstanceProtocol: HTTP
+          LoadBalancerPort: '80'
+          Protocol: HTTP
+      LoadBalancerName: !Join [ "", [ !ImportValue VPCName, "-", "ClassicLoadBalancer" ] ]
+      SecurityGroups: 
+        - !ImportValue LoadBalancerSGID
+      Subnets: 
+        - !ImportValue PublicSubnetAID
+        - !ImportValue PublicSubnetBID
+      Tags: 
+        - Key: Name
+          Value: !Join [ "", [ !ImportValue VPCName, "-", "ClassicLoadBalancer" ] ]
+
+Outputs:
+  ClassicELBName:
+    Description: ClassicELB name
+    Value: !Ref ClassicELB
+    Export:
+      Name: ClassicELBName

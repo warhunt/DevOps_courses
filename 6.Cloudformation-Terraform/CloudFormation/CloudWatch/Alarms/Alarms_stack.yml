@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested Alarm Stack
+
+Resources:
+  IngressAlarm:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/CloudWatch/Alarms/Alarm/Alarm_stack.yml
+      Parameters:
+        Threshold: 75
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Name: CPUUtilGreaterThanOrEqualTo75
+        AlarmActions: !ImportValue NginxASGIngressScalingPolicy
+  
+  DecreaseAlarm:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/CloudWatch/Alarms/Alarm/Alarm_stack.yml
+      Parameters:
+        Threshold: 15
+        ComparisonOperator: LessThanOrEqualToThreshold
+        Name: CPUUtilLessThanOrEqualTo15
+        AlarmActions: !ImportValue NginxASGDecreaseScalingPolicy

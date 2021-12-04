@@ -1,0 +1,122 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested SecurityGroups Stack
+
+Resources:
+  WebSG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroup/SecurityGroup_stack.yml
+      Parameters:
+        Description: PublicSubnets SecurityGroup
+        Name: WebSG
+
+  WebSGIngressSSH:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroupIngress/SecurityGroupIngress_stack.yml
+      Parameters:
+        CidrIp: 46.56.200.231/32
+        FromPort: 22
+        ToPort: 22
+        GroupId: !GetAtt WebSG.Outputs.GroupId
+        IpProtocol: tcp
+    DependsOn: [ 'WebSG' ]
+
+  WebSGIngressHTTP:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroupIngress/SecurityGroupIngress_stack.yml
+      Parameters:
+        FromPort: 80
+        ToPort: 80
+        GroupId: !GetAtt WebSG.Outputs.GroupId
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt LoadBalancerSG.Outputs.GroupId
+    DependsOn: [ 'LoadBalancerSG', 'WebSG' ]
+
+  WebSGIngressHTTPS:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroupIngress/SecurityGroupIngress_stack.yml
+      Parameters:
+        FromPort: 443
+        ToPort: 443
+        GroupId: !GetAtt WebSG.Outputs.GroupId
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt LoadBalancerSG.Outputs.GroupId
+    DependsOn: [ 'LoadBalancerSG', 'WebSG' ]
+
+  LoadBalancerSG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroup/SecurityGroup_stack.yml
+      Parameters:
+        Description: LoadBalancer SecurityGroup
+        Name: LoadBalancerSG
+
+  LoadBalancerSGIngressHTTP:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroupIngress/SecurityGroupIngress_stack.yml
+      Parameters:
+        CidrIp: 0.0.0.0/0
+        FromPort: 80
+        ToPort: 80
+        GroupId: !GetAtt LoadBalancerSG.Outputs.GroupId
+        IpProtocol: tcp
+    DependsOn: [ 'LoadBalancerSG' ]
+
+  RDSSG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroup/SecurityGroup_stack.yml
+      Parameters:
+        Description: RDS SecurityGroup
+        Name: RDSSG
+
+  RDSSGIngressPostgresql:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroupIngress/SecurityGroupIngress_stack.yml
+      Parameters:
+        FromPort: 5432
+        ToPort: 5432
+        GroupId: !GetAtt RDSSG.Outputs.GroupId
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt WebSG.Outputs.GroupId
+    DependsOn: [ 'RDSSG' ]
+
+  ElasticCacheSG:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroup/SecurityGroup_stack.yml
+      Parameters:
+        Description: Elacti cache SecurityGroup
+        Name: ElasticCacheSG
+
+  ElasticCacheSGIngressRedis:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroupIngress/SecurityGroupIngress_stack.yml
+      Parameters:
+        FromPort: 6379
+        ToPort: 6379
+        GroupId: !GetAtt ElasticCacheSG.Outputs.GroupId
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt WebSG.Outputs.GroupId
+    DependsOn: [ 'ElasticCacheSG' ]
+
+  ElasticCacheSGIngressMemcache:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/SecurityGroups/SecurityGroupIngress/SecurityGroupIngress_stack.yml
+      Parameters:
+        FromPort: 11211
+        ToPort: 11211
+        GroupId: !GetAtt ElasticCacheSG.Outputs.GroupId
+        IpProtocol: tcp
+        SourceSecurityGroupId: !GetAtt WebSG.Outputs.GroupId
+    DependsOn: [ 'ElasticCacheSG' ]
+

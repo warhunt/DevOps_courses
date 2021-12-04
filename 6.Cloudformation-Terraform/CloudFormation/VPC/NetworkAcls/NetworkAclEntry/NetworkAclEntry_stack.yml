@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested NetworkAclEntry Stack
+
+Parameters:
+  CidrBlock:
+    Type: String
+    Description: Enter CIDR Block
+  Egress:
+    Default: 'false'
+    Type: String
+    AllowedValues: ['true', 'false']
+    Description: Enter Egress (false - ingress traffic to the subnet, true - egress traffic from the subnet)
+  NetworkAclId:
+    Type: String
+    Description: Enter NetworkAclId
+  RuleAction:
+    Default: 'allow'
+    Type: String
+    AllowedValues: ['allow', 'deny']
+    Description: Enter Egress (false - ingress traffic to the subnet, true - egress traffic from the subnet)
+
+Resources:
+  NetworkAclEntry:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties: 
+      CidrBlock: !Ref CidrBlock
+      Egress: !Ref Egress
+      NetworkAclId: !Ref NetworkAclId
+      Protocol: -1
+      RuleAction: !Ref RuleAction
+      RuleNumber: 100
+
+

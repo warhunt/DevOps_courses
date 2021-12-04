@@ -1,0 +1,42 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested Subnet Stack
+
+Parameters:
+  CidrBlock:
+    Type: String
+    Description: Enter Subnet CIDR for Subnet
+  MapPublicIpOnLaunch:
+    Default: 'true'
+    Type: String
+    AllowedValues: ['true', 'false']
+  Name:
+    Type: String
+    Description: Enter Subnet name
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Enter VPC ID
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: Enter AZ
+
+
+Resources:
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: !Ref AvailabilityZone
+      CidrBlock: !Ref CidrBlock
+      MapPublicIpOnLaunch: !Ref MapPublicIpOnLaunch
+      Tags: 
+        - Key: Name
+          Value: !Join [ "", [ !ImportValue VPCName, "-", !Ref Name ] ]
+      VpcId: !ImportValue VPCID
+
+Outputs:
+  SubnetId:
+    Description: The Subnet ID
+    Value: !Ref Subnet
+    Export:
+      Name: !Join [ "", [ !Ref Name, "ID" ] ]

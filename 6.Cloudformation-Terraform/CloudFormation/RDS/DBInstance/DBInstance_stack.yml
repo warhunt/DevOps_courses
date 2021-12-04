@@ -1,0 +1,37 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested PostgresqlRDS Stack
+
+Resources:
+  PostgresqlDBSubnetGroup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/RDS/DBSubnetGroup/DBSubnetGroup_stack.yml
+
+  PostgresqlRDS:
+    Type: AWS::RDS::DBInstance
+    Properties: 
+      AllocatedStorage: 20
+      AvailabilityZone: !Select 
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      DBInstanceClass: db.t2.micro
+      DBInstanceIdentifier: !Join [ "", [ !ImportValue VPCName, "-", "PostgresqlRDS" ] ]
+      DBSubnetGroupName: !GetAtt PostgresqlDBSubnetGroup.Outputs.DBSubnetGroupName
+      Engine: postgres
+      EngineVersion: 12.5
+      MasterUsername: wolly
+      MasterUserPassword: 123456789
+      MultiAZ: 'false'
+      Port: 5432
+      PubliclyAccessible: 'false'
+      StorageType: gp2
+      Tags:
+        - Key: Name
+          Value: !Join [ "", [ !ImportValue VPCName, "-", "PostgresqlRDS" ] ]
+      VPCSecurityGroups: 
+        - !ImportValue RDSSGID
+
+  
+    

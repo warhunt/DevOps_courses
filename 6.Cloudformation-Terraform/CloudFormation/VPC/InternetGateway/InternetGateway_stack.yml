@@ -1,0 +1,26 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested InternetGateway Stack
+
+Resources:
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: !Join [ "", [ !ImportValue VPCName, "-InternetGateway" ] ]
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !ImportValue VPCID
+      InternetGatewayId: !Ref InternetGateway
+
+Outputs:
+  InternetGatewayID:
+    Description: The InternetGateway ID
+    Value: !Ref InternetGateway
+    Export:
+      Name: !Join [ "", [ "InternetGateway", "ID" ] ]
+

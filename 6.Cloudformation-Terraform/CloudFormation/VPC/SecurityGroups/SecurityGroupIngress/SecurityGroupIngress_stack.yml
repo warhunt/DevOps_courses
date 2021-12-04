@@ -1,0 +1,45 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested SecurityGroupIngress Stack
+
+Parameters:
+  CidrIp:
+    Type: String
+    Default: ''
+    Description: Enter CIDR IP
+  FromPort:
+    Type: Number
+    Description: Enter FromPort
+  ToPort:
+    Type: Number
+    Description: Enter ToPort
+  GroupId:
+    Type: String
+    Description: Enter SecurityGroupID
+  IpProtocol:
+    Type: String
+    Description: Enter IpProtocol
+  SourceSecurityGroupId:
+    Type: String
+    Default: ''
+    Description: Enter SourceSecurityGroupId
+
+Conditions:
+  UseCIDRIp: !Not 
+    - !Equals 
+      - !Ref CidrIp
+      - ''
+
+Resources:
+  SecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      CidrIp:
+        !If [ UseCIDRIp, !Ref CidrIp, !Ref "AWS::NoValue" ]
+      FromPort: !Ref FromPort
+      GroupId: !Ref GroupId
+      IpProtocol: !Ref IpProtocol
+      ToPort: !Ref ToPort
+      SourceSecurityGroupId:
+        !If [ UseCIDRIp, !Ref "AWS::NoValue", !Ref SourceSecurityGroupId ]

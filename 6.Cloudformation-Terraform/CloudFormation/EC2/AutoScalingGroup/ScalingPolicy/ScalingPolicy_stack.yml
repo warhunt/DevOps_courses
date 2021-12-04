@@ -1,0 +1,30 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested ScalingPolicy Stack
+
+Parameters:
+  ScalingAdjustment:
+    Type: Number
+    Description: Enter ScalingAdjustment
+  Name:
+    Type: String
+    Description: Enter ScalingPolicy name
+  AutoScalingGroupName: 
+    Type: String
+    Description: Enter AutoScalingGroup name
+
+Resources:
+  ScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties: 
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGroupName
+      ScalingAdjustment: !Ref ScalingAdjustment
+
+Outputs:
+  ScalingPolicyARN:
+    Description: ScalingPolicy ARN
+    Value: !Ref ScalingPolicy
+    Export:
+      Name: !Ref Name

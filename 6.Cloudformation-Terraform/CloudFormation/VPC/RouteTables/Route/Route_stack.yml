@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested NetworkAclEntry Stack
+
+Parameters:
+  GatewayId:
+    Type: String
+    Description: Enter GatewayId
+  RouteTableId:
+    Type: String
+    Description: Enter RouteTableId
+
+Resources:
+  Route:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref GatewayId
+      RouteTableId: !Ref RouteTableId
+
+

@@ -1,0 +1,33 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested CacheClusters Stack
+
+Resources:
+  CacheSubnet:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/ElasticCache/CacheSubnetGroup/CacheSubnetGroup_stack.yml
+
+  Redis:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/ElasticCache/CacheClusters/CacheCluster/CacheCluster_stack.yml
+      Parameters:
+        Name: RedisCacheCluter
+        Engine: redis
+        EngineVersion: 6.2
+        Port: 6379
+    DependsOn: [ 'CacheSubnet' ]
+  
+  Memcached:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/ElasticCache/CacheClusters/CacheCluster/CacheCluster_stack.yml
+      Parameters:
+        Name: MemcachedCacheCluter
+        Engine: memcached
+        EngineVersion: 1.6.6
+        Port: 11211
+    DependsOn: [ 'CacheSubnet' ]
+        

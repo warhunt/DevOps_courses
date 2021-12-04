@@ -1,0 +1,35 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested VPC Stack
+
+Parameters:
+  CidrBlock:
+    Type: String
+    Description: Enter CIDR Block for VPC
+  Name:
+    Type: String
+    Description: Enter VPC Name
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref CidrBlock
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'false'
+      Tags:
+      - Key: Name
+        Value: !Ref Name
+
+Outputs:
+  VPCID:
+    Description: The VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: VPCID
+  Name:
+    Description: The VPC Name
+    Value: !Ref Name
+    Export:
+      Name: VPCName

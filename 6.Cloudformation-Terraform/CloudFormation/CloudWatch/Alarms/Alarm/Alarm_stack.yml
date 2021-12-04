@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested Alarm Stack
+
+Parameters:
+  Threshold: 
+    Type: Number
+    Description: Enter Threshold
+  ComparisonOperator:
+    Type: String
+    Description: Enter ComparisonOperator
+    AllowedValues: 
+      - GreaterThanOrEqualToThreshold
+      - GreaterThanThreshold
+      - GreaterThanUpperThreshold
+      - LessThanLowerOrGreaterThanUpperThreshold
+      - LessThanLowerThreshold
+      - LessThanOrEqualToThreshold
+      - LessThanThreshold
+  Name: 
+    Type: String
+    Description: Enter Alarm name
+  AlarmActions:
+    Type: String
+    Description: Enter AlarmActions
+
+Resources:
+  Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Join [ "", [ !ImportValue VPCName, "-", !Ref Name ] ]
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: !Ref Threshold
+      Period: '60'
+      AlarmActions: 
+        - !Ref AlarmActions
+      Namespace: AWS/EC2
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !ImportValue NginxASGName
+      ComparisonOperator: !Ref ComparisonOperator
+      MetricName: CPUUtilization

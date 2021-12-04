@@ -1,0 +1,88 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: AWS CloudFormation Nested NetworkAcls Stack
+
+Resources:
+#------------------------------------------------
+  PublicNetworksAcl:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/NetworkAcls/NetworkAcl/NetworkAcl_stack.yml
+      Parameters:
+        Name: PublicNetworksAcl
+
+  InboundPublicNetworksAclEntry:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/NetworkAcls/NetworkAclEntry/NetworkAclEntry_stack.yml
+      Parameters:
+        CidrBlock: 0.0.0.0/0
+        NetworkAclId: !GetAtt PublicNetworksAcl.Outputs.NetworkAclId
+    DependsOn: [ 'PublicNetworksAcl' ]
+
+  OutboundPublicNetworksAclEntry:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/VPC/NetworkAcls/NetworkAclEntry/NetworkAclEntry_stack.yml
+      Parameters:
+        CidrBlock: 0.0.0.0/0
+        Egress: 'true'
+        NetworkAclId: !GetAtt PublicNetworksAcl.Outputs.NetworkAclId
+    DependsOn: [ 'PublicNetworksAcl' ]
+
+  SubnetNetworkAclAssociationPublicA:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties: 
+      NetworkAclId: !GetAtt PublicNetworksAcl.Outputs.NetworkAclId
+      SubnetId: !ImportValue PublicSubnetAID
+    DependsOn: [ 'PublicNetworksAcl' ]
+  
+  SubnetNetworkAclAssociationPublicB:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties: 
+      NetworkAclId: !GetAtt PublicNetworksAcl.Outputs.NetworkAclId
+      SubnetId: !ImportValue PublicSubnetBID
+    DependsOn: [ 'PublicNetworksAcl' ]
+
+#------------------------------------------------
+  PrivateNetworksAcl:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/NetworkAcls/NetworkAcl/NetworkAcl_stack.yml
+      Parameters:
+        Name: PrivateNetworksAcl
+
+  InboundPrivateNetworksAclEntry:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/NetworkAcls/NetworkAclEntry/NetworkAclEntry_stack.yml
+      Parameters:
+        CidrBlock: 10.0.0.0/16
+        NetworkAclId: !GetAtt PrivateNetworksAcl.Outputs.NetworkAclId
+    DependsOn: [ 'PrivateNetworksAcl' ]
+
+  OutboundPrivateNetworksAclEntry:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      TemplateURL: https://s3.us-west-1.amazonaws.com/wolly.test-cloud-formation/NetworkAcls/NetworkAclEntry/NetworkAclEntry_stack.yml
+      Parameters:
+        CidrBlock: 0.0.0.0/0
+        Egress: 'true'
+        NetworkAclId: !GetAtt PrivateNetworksAcl.Outputs.NetworkAclId
+    DependsOn: [ 'PrivateNetworksAcl' ]
+
+  SubnetNetworkAclAssociationPrivateA:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties: 
+      NetworkAclId: !GetAtt PrivateNetworksAcl.Outputs.NetworkAclId
+      SubnetId: !ImportValue PrivateSubnetAID
+    DependsOn: [ 'PrivateNetworksAcl' ]
+  
+  SubnetNetworkAclAssociationPrivateB:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties: 
+      NetworkAclId: !GetAtt PrivateNetworksAcl.Outputs.NetworkAclId
+      SubnetId: !ImportValue PrivateSubnetBID
+    DependsOn: [ 'PrivateNetworksAcl' ]
+
