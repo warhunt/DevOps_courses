@@ -1,0 +1,46 @@
+---
+# tasks file for wordpress
+- name: Create DB wordpress
+  mysql_db:
+    name: "{{ db_name }}"
+    state: present
+
+- name: Create database user with password and wordpress database privileges and 'WITH GRANT OPTION'
+  community.mysql.mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: '{{ db_name }}.*:ALL,GRANT'
+    state: present
+
+- name: Download and unarchive wordpress
+  ansible.builtin.unarchive:
+    src: http://wordpress.org/latest.tar.gz
+    dest: /var/www/html/
+    remote_src: yes
+
+- name: Give insecure permissions to an existing file
+  ansible.builtin.file:
+    path: /var/www/html/wordpress
+    owner: apache
+    group: apache
+    mode: '755'
+    recurse: yes
+
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /var/www/html/wordpress/wp-content/uploads
+    state: directory
+    group: apache
+    recurse: yes
+
+- name: Rename wp-config-sample.php to wp-config.php
+  command: mv /var/www/html/wordpress/wp-config-sample.php /var/www/html/wordpress/wp-config.php
+
+- name: Replace line in /var/www/html/wordpress/wp-config.php
+  lineinfile: 
+    path: /var/www/html/wordpress/wp-config.php
+    regexp: '{{ item.regexp }}' 
+    line: '{{ item.line }}'
+    backrefs: yes
+  with_items: '{{ line_to_replace }}'
+

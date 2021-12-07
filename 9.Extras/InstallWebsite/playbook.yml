@@ -1,0 +1,7 @@
+---
+- hosts: ec2instance
+  become: yes
+  roles:
+    - mysql_secure_installation
+    - word_press
+    - gatsby

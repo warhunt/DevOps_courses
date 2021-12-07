@@ -1,0 +1,48 @@
+---
+# tasks file for PHP
+- name: Install the remi rpm from a remote repo
+  yum:
+    name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: present
+    update_cache: yes
+
+- name: Install yum-utils
+  yum:
+    name: yum-utils
+    state: present
+    update_cache: yes
+
+- name: Install a list of packages with a list variable
+  yum:
+    name: "{{ packages }}"
+    enablerepo: [remi-php73]
+  vars:
+    packages:
+      - php
+      - php-cli
+      - php-curl
+      - php-dom
+      - php-exif
+      - php-fileinfo
+      - php-hash
+      - php-imagick
+      - php-json
+      - php-mbstring
+      - php-mysqli
+      - php-openssl
+      - php-pcre
+      - php-sodium
+      - php-xml
+      - php-zip
+      - php-bcmath
+      - php-filter
+      - php-gd
+      - php-iconv
+      - php-intl
+      - php-mcrypt
+      - php-simplexml
+      - php-xmlreader
+      - php-zlib
+      - php-ssh2
+      - php-ftp
+      - php-sockets

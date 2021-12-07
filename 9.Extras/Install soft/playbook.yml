@@ -1,0 +1,15 @@
+---
+- hosts: ec2instance
+  become: yes
+  roles:
+    - apache
+    - php
+    - mysql
+    - npm
+    - swap
+  post_tasks:
+    - name: Install Python3
+      yum:
+        name: python3
+        state: present
+

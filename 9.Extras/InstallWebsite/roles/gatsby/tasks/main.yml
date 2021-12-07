@@ -1,0 +1,40 @@
+---
+# tasks file for gatsby
+- name: Install "gatsby-cli" node.js package globally.
+  community.general.npm:
+    name: gatsby-cli
+    global: yes
+
+- name: Make sure git is present
+  yum:
+    name: git
+    state: present
+
+- name: Check if app folder exist
+  stat:
+    path: "./{{ app_name }}"
+  register: app_folder
+
+- name: Create website
+  shell: "gatsby new {{ app_name }} {{ app_git }}"
+  when: not app_folder.stat.exists
+
+- name: Build website
+  shell: gatsby build
+  args:
+    chdir: ./gatsby-starter-hello-world
+
+- name: Copy website to /var/www/html/gatsby
+  copy:
+    src: "./{{ app_name }}/public/"
+    dest: /var/www/html/gatsby/
+    directory_mode: yes
+    remote_src: yes
+
+- name: Give insecure permissions to an existing file
+  ansible.builtin.file:
+    path: /var/www/html/gatsby
+    owner: apache
+    group: apache
+    mode: '755'
+    recurse: yes

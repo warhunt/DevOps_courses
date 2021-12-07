@@ -1,0 +1,3 @@
+---
+# defaults file for mysql_secure_installation
+mysql_root_password: "{{ lookup('password', 'credentials/mysqlpassword length=20') }}"

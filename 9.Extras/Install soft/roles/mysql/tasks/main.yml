@@ -1,0 +1,14 @@
+---
+# tasks file for mysql
+- name: Install the MySQL rpm from a remote repo
+  yum:
+    name: https://dev.mysql.com/get/mysql80-community-release-el7-4.noarch.rpm
+    state: present
+
+- name: Install MySQL
+  yum:
+    name: mysql-server
+    state: present
+    update_cache: yes
+  notify:
+    - Restart mysql

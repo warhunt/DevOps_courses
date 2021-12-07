@@ -1,0 +1,263 @@
+{
+"AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudFormation stack for building website on AWS",
+    "Parameters": {
+        "InstanceSize": {
+            "Type": "String",
+            "AllowedValues" : [
+                "t2.2xlarge", 
+                "t2.large",
+                "t2.medium",
+                "t2.micro",
+                "t2.nano",
+                "t2.small",
+                "t2.xlarge",
+                "t3.2xlarge"
+            ],
+            "Default": "t2.micro"
+        },
+        "SSHKey": {
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "Default": "Wolly-Ohio"
+        },
+        "UsePublicIp": {
+            "Type": "String",
+            "AllowedValues": [
+                "true",
+                "false"
+            ],
+            "Default": "true"
+        },
+        "VpcId": {
+            "Type": "AWS::EC2::VPC::Id",
+            "Default": "vpc-0ae1b6e92893214b5"
+        },
+        
+        "InstanceName": {
+            "Type": "String",
+            "Default": "Test" 
+        }
+    },
+    "Conditions" : {
+        "UsePublicIp" : { "Fn::Equals": [ { "Ref": "UsePublicIp" }, "true" ] }
+    },
+    "Resources": {
+        "cfnGetVpc": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": "https://s3.us-east-2.amazonaws.com/wolly.buildwebsite/create_cfnGetVpc.json",
+                "Parameters": { 
+                    "S3Bucket": "wolly.buildwebsite"
+                }
+            }
+        },
+        "VPC": {
+            "Type": "Custom::cfnGetVpc",
+            "Properties": {
+                "ServiceToken": { "Fn::GetAtt" : [ "cfnGetVpc", "Outputs.Arn" ] },
+                "VpcId": { "Ref": "VpcId" },
+                "Region": { "Ref": "AWS::Region" }
+            }
+        },
+        "subnetA": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+            "MapPublicIpOnLaunch" : { "Ref": "UsePublicIp" },            
+            "VpcId": { "Ref": "VpcId" },
+            "AvailabilityZone": { "Fn::Select" : [ 0, { "Fn::GetAZs" : { "Ref": "AWS::Region" } } ] },
+            "CidrBlock": { "Fn::Select" : [ 1, { "Fn::Cidr" : [{ "Fn::GetAtt" : [ "VPC", "CidrBlock" ]}, 77, 8 ]}]},
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-subnetA" ] ]}
+                }
+            ]
+          }
+        },
+        "subnetB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch" : { "Ref": "UsePublicIp" },            
+                "VpcId": { "Ref": "VpcId" },
+                "AvailabilityZone": { "Fn::Select" : [ 1, { "Fn::GetAZs" : { "Ref": "AWS::Region" } } ] },
+                "CidrBlock": { "Fn::Select" : [ 2, { "Fn::Cidr" : [{ "Fn::GetAtt" : [ "VPC", "CidrBlock" ]}, 77, 8 ]}]},
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-subnetB" ] ]}
+                    }
+                ]
+            }
+        },
+        "LoadBalancerSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Load Balancer Security Group for building website",
+                "SecurityGroupIngress" : [ 
+                    {
+                        "CidrIp" : "0.0.0.0/0",
+                        "FromPort" : 80,
+                        "IpProtocol" : "tcp",
+                        "ToPort" : 80
+                    }
+                ],
+                "VpcId": { "Ref": "VpcId" },
+                "Tags":  [ 
+                    {
+                        "Key": "Name",
+                        "Value": {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-ALBSG" ] ]}
+                    }
+                ]
+            }
+        },
+        "InstanceSecurityGroup" : {
+          "Type" : "AWS::EC2::SecurityGroup",
+          "Properties" : {
+            "GroupDescription" : "Instasnce Security Group for building website",
+            "SecurityGroupIngress" : [ 
+                {
+                    "CidrIp" : "46.216.224.194/32",
+                    "FromPort" : 22,
+                    "IpProtocol" : "tcp",
+                    "ToPort" : 22
+                },
+                {
+                    "SourceSecurityGroupId": { "Ref": "LoadBalancerSecurityGroup" },
+                    "FromPort" : 80,
+                    "IpProtocol" : "tcp",
+                    "ToPort" : 80
+                }
+            ],
+            "VpcId": { "Ref": "VpcId" },
+            "Tags":  [ 
+                {
+                    "Key": "Name",
+                    "Value": {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-InstanceSG" ] ]}
+                }
+            ]
+          }
+        },
+        "routeTable": {
+          "Type": "AWS::EC2::RouteTable",
+          "Properties": {
+            "VpcId": { "Ref": "VpcId" },
+            "Tags":  [ 
+                {
+                    "Key": "Name",
+                    "Value": {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-RouteTable" ] ]}
+                }
+            ]
+          }
+        },        
+        "route": {
+          "Type": "AWS::EC2::Route",
+          "Properties": {
+            "DestinationCidrBlock": "0.0.0.0/0",
+            "RouteTableId": { "Ref": "routeTable" },
+            "GatewayId": { "Fn::GetAtt" : [ "VPC", "InternetGateway" ]}
+          }
+        },
+        "routeTableAssoc": {
+          "Type": "AWS::EC2::SubnetRouteTableAssociation",
+          "Properties": {
+            "SubnetId": { "Ref": "subnetA" },
+            "RouteTableId": { "Ref": "routeTable" }
+          }
+        },
+        "Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "KeyName": { "Ref": "SSHKey" },
+                "ImageId": "ami-077ad8120ac23719e" ,
+                "InstanceType": { "Ref": "InstanceSize" },
+                "SecurityGroupIds": [ 
+                    { "Ref": "InstanceSecurityGroup" }
+                ],
+                "SubnetId": { "Ref": "subnetA" },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": { "Ref": "InstanceName" }
+                    }
+                ]
+            }
+        },
+        "ALB": {
+            "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties" : {
+                "IpAddressType" : "ipv4",
+                "Name" : {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-ALB" ] ]},
+                "Scheme" : "internet-facing",
+                "SecurityGroups" : [
+                    { "Ref": "LoadBalancerSecurityGroup" }
+                ],
+                "Subnets" : [ 
+                    { "Ref": "subnetA" },
+                    { "Ref": "subnetB" }
+                ],
+                "Tags" : [
+                    {
+                        "Key": "Name",
+                        "Value": {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-ALB" ] ]}
+                    }
+                ],
+                "Type" : "application"
+            }
+        },
+        "InstanceTG": {
+            "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties" : {
+                "HealthCheckEnabled" : "true",
+                "HealthCheckPath" : "/",
+                "HealthCheckPort" : 80,
+                "HealthCheckProtocol" : "HTTP",
+                "Name" : {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-TG" ] ]},
+                "Port" : 80,
+                "Protocol" : "HTTP",
+                "Tags" : [
+                    {
+                        "Key": "Name",
+                        "Value": {"Fn::Join" : ["",[ { "Ref": "InstanceName" }, "-TG" ] ]}
+                    }
+                ],
+                "Targets" : [ 
+                    {
+                        "Id" : { "Ref": "Instance" },
+                        "Port" : 80
+                    }
+                ],
+                "TargetType" : "instance",
+                "VpcId": { "Ref": "VpcId" }
+            }
+        },
+        "HTTPlistener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "TargetGroupArn" : { "Ref": "InstanceTG" },
+                        "Type" : "forward"
+                    }
+                ],
+                "LoadBalancerArn": { "Ref": "ALB" },
+                "Port": 80,
+                "Protocol": "HTTP"
+            }
+        }
+    },
+    "Outputs": {
+        "PublicInstanceIP": {
+            "Value": { "Fn::If" : [ "UsePublicIp", { "Fn::GetAtt" : [ "Instance", "PublicIp" ]}, "" ] },
+            "Export": {
+                "Name": "PublicInstanceIP"
+            }
+        },
+        "DNSALB": {
+            "Value": { "Fn::GetAtt" : [ "ALB", "DNSName" ]},
+            "Export": {
+                "Name": "DNSALB"
+            }
+        }
+
+    }
+}

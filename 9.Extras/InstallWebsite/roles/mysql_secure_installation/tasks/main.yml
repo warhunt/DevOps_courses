@@ -1,0 +1,66 @@
+---
+# tasks file for mysql_secure_installation
+- name: Make sure pymysql is present
+  pip:
+    name: PyMySQL
+    state: present
+
+- name: Get default root
+  shell: cat /var/log/mysqld.log | grep "temporary password" | grep -oE '[^ ]+$'
+  register: tmp_root_password
+
+- name: Detect and properly set root password
+  stat:
+    path: /root/.my.cnf
+  register: r
+
+- name: Set new password
+  mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+  when: r.stat.exists==True
+
+- name: Change default root password
+  shell: mysql -u root -p{{ tmp_root_password.stdout }} --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}'; FLUSH PRIVILEGES;"
+  when: r.stat.exists==False
+
+- name: Create /root/.my.cnf
+  template:
+    dest: /root/.my.cnf
+    src: .my.cnf.j2
+  when: r.stat.exists==False
+
+- name: Removes all anonymous user accounts
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+
+- name: Secures the MySQL root user for IPV6 localhost (::1)
+  mysql_user: 
+    name: root
+    password: "{{ mysql_root_password }}"
+    host: "::1"
+
+- name: Secures the MySQL root user for IPV4 localhost (127.0.0.1)
+  mysql_user:
+    name: "root" 
+    password: "{{ mysql_root_password }}"
+    host: "127.0.0.1"
+
+- name: Secures the MySQL root user for localhost domain (localhost)
+  mysql_user: 
+    name: "root"
+    password: "{{ mysql_root_password }}"
+    host: "localhost"
+
+- name: Secures the MySQL root user for server_hostname domain
+  mysql_user: 
+    name: "root"
+    password: "{{ mysql_root_password }}"
+    host: "{{ ansible_fqdn }}"
+
+- name: Delete test database
+  mysql_db:
+    name: test
+    state: absent

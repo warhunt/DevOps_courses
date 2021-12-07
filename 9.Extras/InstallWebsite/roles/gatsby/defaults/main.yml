@@ -1,0 +1,4 @@
+---
+# defaults file for gatsby
+app_name: gatsby-starter-hello-world
+app_git: https://github.com/gatsbyjs/gatsby-starter-hello-world

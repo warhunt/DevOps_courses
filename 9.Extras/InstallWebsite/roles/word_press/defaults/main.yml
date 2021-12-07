@@ -1,0 +1,11 @@
+---
+# defaults file for wordpress
+db_name: wordpress
+db_user: wordpressuser
+db_password: "{{ lookup('password', 'credentials/wordpresspassword length=20') }}"
+
+line_to_replace:
+  - { regexp: '^(.*)DB_NAME(.*)$', line: "define('DB_NAME', '{{ db_name }}');"}
+  - { regexp: '^(.*)DB_USER(.*)$', line: "define('DB_USER', '{{ db_user }}');"}
+  - { regexp: '^(.*)DB_PASSWORD(.*)$', line: "define('DB_PASSWORD', '{{ db_password }}');"}
+  - { regexp: '^(.*)DB_HOST(.*)$', line: "define('DB_HOST', 'localhost');"}
